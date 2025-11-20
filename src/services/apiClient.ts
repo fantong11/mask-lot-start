@@ -1,8 +1,8 @@
-import axios from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { message } from 'antd';
 
 // Create Axios instance
-const apiClient = axios.create({
+const apiClient: AxiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api', // Default to local mock
     timeout: 10000,
     headers: {
@@ -20,17 +20,17 @@ apiClient.interceptors.request.use(
         // }
         return config;
     },
-    (error) => {
+    (error: AxiosError) => {
         return Promise.reject(error);
     }
 );
 
 // Response Interceptor
 apiClient.interceptors.response.use(
-    (response) => {
+    (response: AxiosResponse) => {
         return response.data;
     },
-    (error) => {
+    (error: AxiosError) => {
         // Handle common errors
         if (error.response) {
             const { status, data } = error.response;
@@ -49,7 +49,7 @@ apiClient.interceptors.response.use(
                     message.error('Server Error. Please try again later.');
                     break;
                 default:
-                    message.error(data.message || 'An unexpected error occurred.');
+                    message.error((data as any).message || 'An unexpected error occurred.');
             }
         } else if (error.request) {
             message.error('Network Error. Please check your connection.');
@@ -62,10 +62,10 @@ apiClient.interceptors.response.use(
 
 // Generic API Service
 const ApiService = {
-    get: (url, params = {}) => apiClient.get(url, { params }),
-    post: (url, data = {}) => apiClient.post(url, data),
-    put: (url, data = {}) => apiClient.put(url, data),
-    delete: (url) => apiClient.delete(url),
+    get: <T = any>(url: string, params: any = {}): Promise<T> => apiClient.get(url, { params }),
+    post: <T = any>(url: string, data: any = {}): Promise<T> => apiClient.post(url, data),
+    put: <T = any>(url: string, data: any = {}): Promise<T> => apiClient.put(url, data),
+    delete: <T = any>(url: string): Promise<T> => apiClient.delete(url),
 };
 
 export default ApiService;

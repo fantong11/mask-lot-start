@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Tag, Button, Card, Typography, Tooltip, message, DatePicker, Space } from 'antd';
-import { CheckCircleOutlined, SyncOutlined, ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
-import { LotService } from '../services/mockData';
-import dayjs from 'dayjs';
+import { Table, Tag, Button, Card, Typography, DatePicker, Space } from 'antd';
+import { CheckCircleOutlined, SyncOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { LotService, Lot } from '../services/mockData';
+import dayjs, { Dayjs } from 'dayjs';
+import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-const HistoryDashboard = () => {
-    const [allData, setAllData] = useState([]); // Store all data
-    const [filteredData, setFilteredData] = useState([]); // Store filtered data for display
-    const [loading, setLoading] = useState(false);
-    const [dateRange, setDateRange] = useState(null);
+const HistoryDashboard: React.FC = () => {
+    const [allData, setAllData] = useState<Lot[]>([]); // Store all data
+    const [filteredData, setFilteredData] = useState<Lot[]>([]); // Store filtered data for display
+    const [loading, setLoading] = useState<boolean>(false);
+    const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
 
     const loadData = () => {
         setLoading(true);
@@ -25,8 +26,8 @@ const HistoryDashboard = () => {
         }, 500);
     };
 
-    const filterData = (data, range) => {
-        if (!range || range.length === 0) {
+    const filterData = (data: Lot[], range: [Dayjs | null, Dayjs | null] | null) => {
+        if (!range || !range[0] || !range[1]) {
             setFilteredData(data);
             return;
         }
@@ -48,24 +49,24 @@ const HistoryDashboard = () => {
         filterData(allData, dateRange);
     }, [dateRange, allData]);
 
-    const columns = [
+    const columns: ColumnsType<Lot> = [
         {
             title: 'Lot ID',
             dataIndex: 'id',
             key: 'id',
-            render: (text) => <span style={{ fontFamily: 'monospace' }}>{text}</span>,
+            render: (text: string) => <span style={{ fontFamily: 'monospace' }}>{text}</span>,
         },
         {
             title: 'Product ID',
             dataIndex: 'productId',
             key: 'productId',
-            render: (text) => <b>{text}</b>,
+            render: (text: string) => <b>{text}</b>,
         },
         {
             title: 'Layer',
             dataIndex: 'layer',
             key: 'layer',
-            render: (text) => <Tag color="purple">{text}</Tag>,
+            render: (text: string) => <Tag color="purple">{text}</Tag>,
         },
         {
             title: 'Fab',
@@ -81,7 +82,7 @@ const HistoryDashboard = () => {
             title: 'Priority',
             dataIndex: 'priority',
             key: 'priority',
-            render: (priority) => {
+            render: (priority: string) => {
                 let color = 'blue';
                 if (priority === 'Urgent') color = 'red';
                 if (priority === 'Low') color = 'default';
@@ -92,7 +93,7 @@ const HistoryDashboard = () => {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            render: (status) => {
+            render: (status: string) => {
                 let color = 'default';
                 let icon = <ClockCircleOutlined />;
                 if (status === 'Approved') {
@@ -116,7 +117,7 @@ const HistoryDashboard = () => {
                 </Space>
                 <Space>
                     <RangePicker
-                        onChange={(dates) => setDateRange(dates)}
+                        onChange={(dates) => setDateRange(dates as [Dayjs | null, Dayjs | null])}
                         style={{ width: 300 }}
                     />
                     <Button icon={<SyncOutlined />} onClick={loadData}>Refresh</Button>

@@ -1,25 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Form, Select, Button, Card, Descriptions, message, Space, Typography, Alert, Input, Divider, Badge } from 'antd';
+import { Form, Select, Button, Card, Descriptions, message, Space, Alert, Input, Divider, Badge } from 'antd';
 import { ArrowLeftOutlined, CopyOutlined } from '@ant-design/icons';
-import { MaskService, LotService } from '../services/mockData';
+import { MaskService, LotService, Product, FormOptions } from '../services/mockData';
 
 const { Option } = Select;
 
-const LotStartForm = () => {
-    const { productId } = useParams();
+const LotStartForm: React.FC = () => {
+    const { productId } = useParams<{ productId: string }>();
     const navigate = useNavigate();
-    const [product, setProduct] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [selectedLayers, setSelectedLayers] = useState([]);
+    const [product, setProduct] = useState<Product | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [selectedLayers, setSelectedLayers] = useState<string[]>([]);
     const [form] = Form.useForm();
 
     // Options State
-    const [options, setOptions] = useState({ fabs: [], reasons: [], priorities: [] });
-    const [optionsLoading, setOptionsLoading] = useState(false);
+    const [options, setOptions] = useState<FormOptions>({ fabs: [], reasons: [], priorities: [] });
+    const [optionsLoading, setOptionsLoading] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!productId) return;
             setOptionsLoading(true);
             try {
                 const prod = MaskService.getProductById(productId);
@@ -42,16 +43,18 @@ const LotStartForm = () => {
         fetchData();
     }, [productId, navigate]);
 
-    const onFinish = (values) => {
+    const onFinish = (values: any) => {
         if (selectedLayers.length === 0) {
             message.error('Please select at least one layer');
             return;
         }
 
+        if (!product) return;
+
         setLoading(true);
         // Simulate network delay
         setTimeout(() => {
-            const createdIds = [];
+            const createdIds: string[] = [];
 
             selectedLayers.forEach(layer => {
                 const layerData = values.lots[layer];
@@ -70,7 +73,7 @@ const LotStartForm = () => {
         }, 1500);
     };
 
-    const handleLayerChange = (layers) => {
+    const handleLayerChange = (layers: string[]) => {
         setSelectedLayers(layers);
     };
 

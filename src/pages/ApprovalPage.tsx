@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Tag, Button, Card, Typography, Tooltip, message, Space, Popconfirm } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { LotService } from '../services/mockData';
+import { Table, Tag, Button, Card, Typography, message, Space, Popconfirm } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { LotService, Lot } from '../services/mockData';
+import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
 
-const ApprovalPage = () => {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(false);
+const ApprovalPage: React.FC = () => {
+    const [data, setData] = useState<Lot[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
 
     const loadData = () => {
         setLoading(true);
@@ -25,7 +26,7 @@ const ApprovalPage = () => {
         loadData();
     }, []);
 
-    const handleStatusUpdate = async (record, newStatus) => {
+    const handleStatusUpdate = async (record: Lot, newStatus: Lot['status']) => {
         try {
             await LotService.updateStatus(record.id, newStatus);
             message.success(`Lot ${record.id} ${newStatus === 'Approved' ? 'Approved' : 'Rejected'}`);
@@ -35,24 +36,24 @@ const ApprovalPage = () => {
         }
     };
 
-    const columns = [
+    const columns: ColumnsType<Lot> = [
         {
             title: 'Lot ID',
             dataIndex: 'id',
             key: 'id',
-            render: (text) => <span style={{ fontFamily: 'monospace' }}>{text}</span>,
+            render: (text: string) => <span style={{ fontFamily: 'monospace' }}>{text}</span>,
         },
         {
             title: 'Product ID',
             dataIndex: 'productId',
             key: 'productId',
-            render: (text) => <b>{text}</b>,
+            render: (text: string) => <b>{text}</b>,
         },
         {
             title: 'Layer',
             dataIndex: 'layer',
             key: 'layer',
-            render: (text) => <Tag color="purple">{text}</Tag>,
+            render: (text: string) => <Tag color="purple">{text}</Tag>,
         },
         {
             title: 'Fab',
@@ -68,7 +69,7 @@ const ApprovalPage = () => {
             title: 'Priority',
             dataIndex: 'priority',
             key: 'priority',
-            render: (priority) => {
+            render: (priority: string) => {
                 let color = 'blue';
                 if (priority === 'Urgent') color = 'red';
                 if (priority === 'Low') color = 'default';
@@ -79,7 +80,7 @@ const ApprovalPage = () => {
             title: 'Created At',
             dataIndex: 'createdAt',
             key: 'createdAt',
-            render: (date) => new Date(date).toLocaleString(),
+            render: (date: string) => new Date(date).toLocaleString(),
         },
         {
             title: 'Action',

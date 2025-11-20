@@ -6,7 +6,7 @@ import LotStartForm from './pages/LotStartForm';
 import HistoryDashboard from './pages/HistoryDashboard';
 import ApprovalPage from './pages/ApprovalPage';
 
-function App() {
+const App: React.FC = () => {
   return (
     <Router>
       <MainLayout>

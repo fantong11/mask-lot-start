@@ -6,7 +6,11 @@ import { SearchOutlined, HistoryOutlined, CheckCircleOutlined } from '@ant-desig
 const { Header, Content, Footer } = Layout;
 const { Title } = Typography;
 
-const MainLayout = ({ children }) => {
+interface MainLayoutProps {
+    children: React.ReactNode;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const {

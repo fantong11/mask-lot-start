@@ -2,21 +2,22 @@ import React, { useState } from 'react';
 import { Input, Table, Button, Card, Tag, Typography, Select } from 'antd';
 import { SearchOutlined, RocketOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { MaskService } from '../services/mockData';
+import { MaskService, Product } from '../services/mockData';
+import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
 
-const SearchPage = () => {
-    const [searchText, setSearchText] = useState('');
-    const [fabCode, setFabCode] = useState(null);
-    const [costCenter, setCostCenter] = useState(null);
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(false);
+const SearchPage: React.FC = () => {
+    const [searchText, setSearchText] = useState<string>('');
+    const [fabCode, setFabCode] = useState<string | null>(null);
+    const [costCenter, setCostCenter] = useState<string | null>(null);
+    const [data, setData] = useState<Product[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
 
     // Filter Options State
-    const [fabCodes, setFabCodes] = useState([]);
-    const [costCenters, setCostCenters] = useState([]);
-    const [filtersLoading, setFiltersLoading] = useState(false);
+    const [fabCodes, setFabCodes] = useState<string[]>([]);
+    const [costCenters, setCostCenters] = useState<string[]>([]);
+    const [filtersLoading, setFiltersLoading] = useState<boolean>(false);
 
     const navigate = useNavigate();
 
@@ -46,19 +47,19 @@ const SearchPage = () => {
 
         setLoading(true);
         try {
-            const results = await MaskService.searchProducts(searchText, { fabCode, costCenter });
+            const results = await MaskService.searchProducts(searchText, { fabCode: fabCode || undefined, costCenter: costCenter || undefined });
             setData(results);
         } finally {
             setLoading(false);
         }
     };
 
-    const columns = [
+    const columns: ColumnsType<Product> = [
         {
             title: 'Product ID',
             dataIndex: 'id',
             key: 'id',
-            render: (text) => <span style={{ fontWeight: 'bold' }}>{text}</span>,
+            render: (text: string) => <span style={{ fontWeight: 'bold' }}>{text}</span>,
         },
         {
             title: 'Product Name',
@@ -69,13 +70,13 @@ const SearchPage = () => {
             title: 'Tech Node',
             dataIndex: 'tech',
             key: 'tech',
-            render: (tech) => <Tag color="blue">{tech}</Tag>,
+            render: (tech: string) => <Tag color="blue">{tech}</Tag>,
         },
         {
             title: 'Available Layers',
             dataIndex: 'layers',
             key: 'layers',
-            render: (layers) => (
+            render: (layers: string[]) => (
                 <span>{layers.length} Layers</span>
             ),
         },
