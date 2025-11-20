@@ -1,53 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Tag, Button, Card, Typography, DatePicker, Space } from 'antd';
 import { CheckCircleOutlined, SyncOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { LotService, Lot } from '../services/mockData';
-import dayjs, { Dayjs } from 'dayjs';
+import { useLotHistory } from '../hooks/useLotHistory';
+import { Lot } from '../services/mockData';
+import { Dayjs } from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 const HistoryDashboard: React.FC = () => {
-    const [allData, setAllData] = useState<Lot[]>([]); // Store all data
-    const [filteredData, setFilteredData] = useState<Lot[]>([]); // Store filtered data for display
-    const [loading, setLoading] = useState<boolean>(false);
+    const { filteredData, loading, loadData, filterByDate } = useLotHistory();
     const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
 
-    const loadData = () => {
-        setLoading(true);
-        const lots = LotService.getLots();
-        // Simulate network delay
-        setTimeout(() => {
-            setAllData(lots);
-            // Apply current filter if exists, otherwise show all
-            filterData(lots, dateRange);
-            setLoading(false);
-        }, 500);
-    };
-
-    const filterData = (data: Lot[], range: [Dayjs | null, Dayjs | null] | null) => {
-        if (!range || !range[0] || !range[1]) {
-            setFilteredData(data);
-            return;
-        }
-
-        const [start, end] = range;
-        const filtered = data.filter(item => {
-            const itemDate = dayjs(item.createdAt);
-            return itemDate.isAfter(start.startOf('day')) && itemDate.isBefore(end.endOf('day'));
-        });
-        setFilteredData(filtered);
-    };
-
     useEffect(() => {
-        loadData();
-    }, []);
-
-    // Re-filter when date range changes
-    useEffect(() => {
-        filterData(allData, dateRange);
-    }, [dateRange, allData]);
+        filterByDate(dateRange);
+    }, [dateRange, filterByDate]);
 
     const columns: ColumnsType<Lot> = [
         {

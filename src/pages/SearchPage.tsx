@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Input, Table, Button, Card, Tag, Typography, Select } from 'antd';
 import { SearchOutlined, RocketOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { MaskService, Product } from '../services/mockData';
+import { useProductSearch } from '../hooks/useProductSearch';
+import { Product } from '../services/mockData';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
@@ -11,47 +12,19 @@ const SearchPage: React.FC = () => {
     const [searchText, setSearchText] = useState<string>('');
     const [fabCode, setFabCode] = useState<string | null>(null);
     const [costCenter, setCostCenter] = useState<string | null>(null);
-    const [data, setData] = useState<Product[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-
-    // Filter Options State
-    const [fabCodes, setFabCodes] = useState<string[]>([]);
-    const [costCenters, setCostCenters] = useState<string[]>([]);
-    const [filtersLoading, setFiltersLoading] = useState<boolean>(false);
-
     const navigate = useNavigate();
 
-    // Fetch Filters on Mount
-    React.useEffect(() => {
-        const fetchFilters = async () => {
-            setFiltersLoading(true);
-            try {
-                const [fabs, ccs] = await Promise.all([
-                    MaskService.getFabCodes(),
-                    MaskService.getCostCenters()
-                ]);
-                setFabCodes(fabs);
-                setCostCenters(ccs);
-            } catch (error) {
-                console.error("Failed to fetch filters", error);
-            } finally {
-                setFiltersLoading(false);
-            }
-        };
-        fetchFilters();
-    }, []);
+    const {
+        data,
+        loading,
+        fabCodes,
+        costCenters,
+        filtersLoading,
+        search
+    } = useProductSearch();
 
-    const handleSearch = async () => {
-        // Allow search if any field is filled
-        if (!searchText && !fabCode && !costCenter) return;
-
-        setLoading(true);
-        try {
-            const results = await MaskService.searchProducts(searchText, { fabCode: fabCode || undefined, costCenter: costCenter || undefined });
-            setData(results);
-        } finally {
-            setLoading(false);
-        }
+    const handleSearch = () => {
+        search(searchText, fabCode || undefined, costCenter || undefined);
     };
 
     const columns: ColumnsType<Product> = [
@@ -59,7 +32,7 @@ const SearchPage: React.FC = () => {
             title: 'Product ID',
             dataIndex: 'id',
             key: 'id',
-            render: (text: string) => <span style={{ fontWeight: 'bold' }}>{text}</span>,
+            render: (text: string) => <b>{text}</b>,
         },
         {
             title: 'Product Name',
@@ -70,14 +43,19 @@ const SearchPage: React.FC = () => {
             title: 'Tech Node',
             dataIndex: 'tech',
             key: 'tech',
-            render: (tech: string) => <Tag color="blue">{tech}</Tag>,
+            render: (text: string) => <Tag color="blue">{text}</Tag>,
         },
         {
-            title: 'Available Layers',
+            title: 'Layers',
             dataIndex: 'layers',
             key: 'layers',
-            render: (layers: string[]) => (
-                <span>{layers.length} Layers</span>
+            render: (layers: any[]) => (
+                <>
+                    {layers.slice(0, 3).map(layer => (
+                        <Tag key={layer.name}>{layer.name}</Tag>
+                    ))}
+                    {layers.length > 3 && <Tag>+{layers.length - 3}</Tag>}
+                </>
             ),
         },
         {
@@ -87,9 +65,14 @@ const SearchPage: React.FC = () => {
                 <Button
                     type="primary"
                     icon={<RocketOutlined />}
-                    onClick={() => navigate(`/start/${record.id}`)}
+                    onClick={() => {
+                        const params = new URLSearchParams();
+                        if (fabCode) params.append('fabCode', fabCode);
+                        if (costCenter) params.append('costCenter', costCenter);
+                        navigate(`/start/${record.id}?${params.toString()}`);
+                    }}
                 >
-                    Select Product
+                    Start Lot
                 </Button>
             ),
         },
@@ -97,76 +80,57 @@ const SearchPage: React.FC = () => {
 
     return (
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ marginBottom: 32 }}>
-                <Title level={2} style={{ textAlign: 'center' }}>Find a Product to Start Lot</Title>
-
-                <Card bordered={false} style={{ marginTop: 24, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '16px', alignItems: 'end' }}>
-                        <div>
-                            <Typography.Text strong>Product ID / Name</Typography.Text>
-                            <Input
-                                placeholder="e.g., N3_LOGIC..."
-                                value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
-                                size="large"
-                                style={{ marginTop: 8 }}
-                            />
-                        </div>
-
-                        <div>
-                            <Typography.Text strong>Fab Code (Origin)</Typography.Text>
-                            <Select
-                                placeholder="Select Fab Code"
-                                allowClear
-                                style={{ width: '100%', marginTop: 8 }}
-                                size="large"
-                                onChange={setFabCode}
-                                loading={filtersLoading}
-                                disabled={filtersLoading}
-                                options={fabCodes.map(code => ({ label: code, value: code }))}
-                            />
-                        </div>
-
-                        <div>
-                            <Typography.Text strong>Cost Center</Typography.Text>
-                            <Select
-                                placeholder="Select Cost Center"
-                                allowClear
-                                showSearch
-                                style={{ width: '100%', marginTop: 8 }}
-                                size="large"
-                                onChange={setCostCenter}
-                                loading={filtersLoading}
-                                disabled={filtersLoading}
-                                options={costCenters.map(cc => ({ label: cc, value: cc }))}
-                                filterOption={(input, option) =>
-                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                                }
-                                virtual={true}
-                            />
-                        </div>
-
-                        <Button
-                            type="primary"
-                            icon={<SearchOutlined />}
-                            loading={loading}
-                            onClick={handleSearch}
-                            size="large"
-                            style={{ marginBottom: 1 }}
-                        >
-                            Search
-                        </Button>
-                    </div>
-                </Card>
+            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+                <Title level={1} style={{ marginBottom: 16 }}>Mask Lot Start System</Title>
+                <Typography.Text type="secondary" style={{ fontSize: 18 }}>
+                    Search for a product mask to initiate a new production lot
+                </Typography.Text>
             </div>
 
-            <Card title="Shipped Products / Models" bordered={false} style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            <Card bordered={false} style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)', marginBottom: 32 }}>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: 24 }}>
+                    <Input
+                        size="large"
+                        placeholder="Search by Product ID or Name..."
+                        prefix={<SearchOutlined />}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        onPressEnter={handleSearch}
+                        style={{ flex: 2 }}
+                    />
+                    <Select
+                        size="large"
+                        placeholder="Fab Code"
+                        allowClear
+                        style={{ flex: 1 }}
+                        onChange={setFabCode}
+                        loading={filtersLoading}
+                        options={fabCodes.map(code => ({ label: code, value: code }))}
+                    />
+                    <Select
+                        size="large"
+                        placeholder="Cost Center"
+                        allowClear
+                        showSearch
+                        style={{ flex: 1 }}
+                        onChange={setCostCenter}
+                        loading={filtersLoading}
+                        options={costCenters.slice(0, 100).map(cc => ({ label: cc, value: cc }))}
+                        filterOption={(input, option) =>
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                    />
+                    <Button type="primary" size="large" onClick={handleSearch} loading={loading}>
+                        Search
+                    </Button>
+                </div>
+
                 <Table
                     columns={columns}
                     dataSource={data}
                     rowKey="id"
                     loading={loading}
-                    pagination={{ pageSize: 5 }}
+                    locale={{ emptyText: 'No products found. Try adjusting your search.' }}
                 />
             </Card>
         </div>

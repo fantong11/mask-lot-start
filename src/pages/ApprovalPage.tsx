@@ -1,39 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Tag, Button, Card, Typography, message, Space, Popconfirm } from 'antd';
+import React, { useEffect } from 'react';
+import { Table, Tag, Button, Card, Typography, Space, Popconfirm } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
-import { LotService, Lot } from '../services/mockData';
+import { useLotHistory } from '../hooks/useLotHistory';
+import { useLotAction } from '../hooks/useLotAction';
+import { Lot } from '../services/mockData';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
 
 const ApprovalPage: React.FC = () => {
-    const [data, setData] = useState<Lot[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-
-    const loadData = () => {
-        setLoading(true);
-        const lots = LotService.getLots();
-        // Simulate network delay
-        setTimeout(() => {
-            // Filter for Pending items only
-            const pendingLots = lots.filter(lot => lot.status === 'Pending');
-            setData(pendingLots);
-            setLoading(false);
-        }, 500);
-    };
+    const { allData, loadData, filterByStatus } = useLotHistory();
+    const { loading: actionLoading, updateStatus } = useLotAction();
 
     useEffect(() => {
-        loadData();
-    }, []);
+        filterByStatus('Pending');
+    }, [filterByStatus]); // Initial filter
 
-    const handleStatusUpdate = async (record: Lot, newStatus: Lot['status']) => {
-        try {
-            await LotService.updateStatus(record.id, newStatus);
-            message.success(`Lot ${record.id} ${newStatus === 'Approved' ? 'Approved' : 'Rejected'}`);
-            loadData(); // Reload to remove the item from the list
-        } catch (error) {
-            message.error("Failed to update status");
-        }
+
+
+
+
+    // Actually, `useLotHistory` returns `allData`.
+    // Let's use `allData` and filter it locally for "Pending" to be robust.
+    const pendingData = allData.filter(lot => lot.status === 'Pending');
+
+    // Wait, `useLotHistory` calls `loadData` on mount.
+    // So `allData` will be populated.
+
+    const handleStatusUpdate = (record: Lot, newStatus: Lot['status']) => {
+        updateStatus(record.id, newStatus, () => {
+            loadData(); // Reload data to refresh list
+        });
     };
 
     const columns: ColumnsType<Lot> = [
@@ -93,7 +90,7 @@ const ApprovalPage: React.FC = () => {
                         okText="Yes"
                         cancelText="No"
                     >
-                        <Button type="primary" size="small" icon={<CheckCircleOutlined />}>
+                        <Button type="primary" size="small" icon={<CheckCircleOutlined />} loading={actionLoading}>
                             Approve
                         </Button>
                     </Popconfirm>
@@ -104,7 +101,7 @@ const ApprovalPage: React.FC = () => {
                         cancelText="No"
                         okButtonProps={{ danger: true }}
                     >
-                        <Button danger size="small" icon={<CloseCircleOutlined />}>
+                        <Button danger size="small" icon={<CloseCircleOutlined />} loading={actionLoading}>
                             Reject
                         </Button>
                     </Popconfirm>
@@ -117,7 +114,7 @@ const ApprovalPage: React.FC = () => {
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Title level={2} style={{ margin: 0 }}>Pending Approvals</Title>
-                <Button icon={<SyncOutlined />} onClick={loadData} loading={loading}>
+                <Button icon={<SyncOutlined />} onClick={loadData} loading={false}>
                     Refresh
                 </Button>
             </div>
@@ -125,9 +122,9 @@ const ApprovalPage: React.FC = () => {
             <Card bordered={false} style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                 <Table
                     columns={columns}
-                    dataSource={data}
+                    dataSource={pendingData}
                     rowKey="id"
-                    loading={loading}
+                    loading={false}
                     locale={{ emptyText: 'No pending approvals' }}
                 />
             </Card>

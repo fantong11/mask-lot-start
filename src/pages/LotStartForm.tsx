@@ -1,81 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Form, Select, Button, Card, Descriptions, message, Space, Alert, Input, Divider, Badge } from 'antd';
+import { Form, Select, Button, Card, Descriptions, message, Space, Alert, Input, Divider, Badge, Tag } from 'antd';
 import { ArrowLeftOutlined, CopyOutlined } from '@ant-design/icons';
-import { MaskService, LotService, Product, FormOptions } from '../services/mockData';
+import { useLotStartForm } from '../hooks/useLotStartForm';
 
 const { Option } = Select;
 
 const LotStartForm: React.FC = () => {
     const { productId } = useParams<{ productId: string }>();
     const navigate = useNavigate();
-    const [product, setProduct] = useState<Product | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [selectedLayers, setSelectedLayers] = useState<string[]>([]);
-    const [form] = Form.useForm();
 
-    // Options State
-    const [options, setOptions] = useState<FormOptions>({ fabs: [], reasons: [], priorities: [] });
-    const [optionsLoading, setOptionsLoading] = useState<boolean>(false);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!productId) return;
-            setOptionsLoading(true);
-            try {
-                const prod = MaskService.getProductById(productId);
-                if (prod) {
-                    setProduct(prod);
-                } else {
-                    message.error('Product not found');
-                    navigate('/');
-                }
-
-                const opts = await LotService.getFormOptions();
-                setOptions(opts);
-            } catch (error) {
-                console.error("Failed to fetch options", error);
-                message.error("Failed to load form options");
-            } finally {
-                setOptionsLoading(false);
-            }
-        };
-        fetchData();
-    }, [productId, navigate]);
-
-    const onFinish = (values: any) => {
-        if (selectedLayers.length === 0) {
-            message.error('Please select at least one layer');
-            return;
-        }
-
-        if (!product) return;
-
-        setLoading(true);
-        // Simulate network delay
-        setTimeout(() => {
-            const createdIds: string[] = [];
-
-            selectedLayers.forEach(layer => {
-                const layerData = values.lots[layer];
-                const newLot = LotService.createLot({
-                    productId: product.id,
-                    productName: product.name,
-                    layer: layer,
-                    ...layerData
-                });
-                createdIds.push(newLot.id);
-            });
-
-            message.success(`Batch Start Successful! Generated ${createdIds.length} Lots: ${createdIds.join(', ')}`);
-            setLoading(false);
-            navigate('/history');
-        }, 1500);
-    };
-
-    const handleLayerChange = (layers: string[]) => {
-        setSelectedLayers(layers);
-    };
+    const {
+        form,
+        product,
+        loading,
+        selectedLayers,
+        options,
+        optionsLoading,
+        handleLayerChange,
+        submitBatch,
+        context
+    } = useLotStartForm(productId);
 
     if (!product) return null;
 
@@ -96,6 +41,8 @@ const LotStartForm: React.FC = () => {
                         <Descriptions.Item label="Product Name">{product.name}</Descriptions.Item>
                         <Descriptions.Item label="Tech Node">{product.tech}</Descriptions.Item>
                         <Descriptions.Item label="Total Layers">{product.layers.length}</Descriptions.Item>
+                        {context.fabCode && <Descriptions.Item label="Fab Code"><Tag color="blue">{context.fabCode}</Tag></Descriptions.Item>}
+                        {context.costCenter && <Descriptions.Item label="Cost Center"><Tag color="green">{context.costCenter}</Tag></Descriptions.Item>}
                     </Descriptions>
                 </Card>
 
@@ -111,7 +58,7 @@ const LotStartForm: React.FC = () => {
                     <Form
                         form={form}
                         layout="vertical"
-                        onFinish={onFinish}
+                        onFinish={submitBatch}
                         initialValues={{}}
                     >
                         <Form.Item
@@ -125,9 +72,17 @@ const LotStartForm: React.FC = () => {
                                 onChange={handleLayerChange}
                                 style={{ width: '100%' }}
                                 size="large"
+                                optionLabelProp="label"
                             >
-                                {product.layers.map(layer => (
-                                    <Option key={layer} value={layer}>{layer}</Option>
+                                {product.layers.map((layer: any) => (
+                                    <Option key={layer.name} value={layer.name} label={layer.name}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span>{layer.name}</span>
+                                            <span style={{ color: '#888', fontSize: '12px' }}>
+                                                {layer.maskId} (Rev: {layer.revision}) - {layer.status}
+                                            </span>
+                                        </div>
+                                    </Option>
                                 ))}
                             </Select>
                         </Form.Item>
