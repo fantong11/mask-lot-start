@@ -195,6 +195,7 @@ const SearchPage: React.FC = () => {
                         dataSource={data}
                         rowKey="id"
                         loading={loading}
+                        scroll={{ x: 'max-content' }}
                         pagination={{
                             pageSize: 5,
                             showSizeChanger: true,

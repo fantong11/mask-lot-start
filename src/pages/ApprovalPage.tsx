@@ -151,6 +151,7 @@ const ApprovalPage: React.FC = () => {
                     dataSource={pendingData}
                     rowKey="id"
                     loading={actionLoading}
+                    scroll={{ x: 'max-content' }}
                     pagination={{
                         pageSize: 10,
                         showSizeChanger: true,
