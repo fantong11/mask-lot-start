@@ -16,7 +16,8 @@
         "strict": true, // strict is good
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "noFallthroughCasesInSwitch": true
+        "noFallthroughCasesInSwitch": true,
+        "allowJs": true
     },
     "include": [
         "vite.config.js"
