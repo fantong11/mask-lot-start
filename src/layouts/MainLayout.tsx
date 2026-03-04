@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Typography, Dropdown, Avatar } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layers, History, CheckCircle, Search, Menu as MenuIcon, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const { Title } = Typography;
 
@@ -39,14 +40,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         {/* Logo Area */}
-                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+                        <motion.div
+                            className="flex items-center gap-3 cursor-pointer"
+                            onClick={() => navigate('/')}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                        >
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
                                 <Layers size={22} className="text-white" />
                             </div>
                             <Title level={4} style={{ margin: 0 }} className="hidden sm:block text-slate-800 font-semibold tracking-tight">
                                 Mask Lot Start
                             </Title>
-                        </div>
+                        </motion.div>
 
                         {/* Desktop Navigation */}
                         <nav className="hidden md:flex space-x-1">
@@ -56,15 +62,25 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                                     <button
                                         key={item.key}
                                         onClick={() => navigate(item.key)}
-                                        className={`flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                                            ? 'bg-sky-50 text-sky-600 shadow-sm'
-                                            : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                                        className={`relative flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 ${isActive
+                                            ? 'text-sky-600'
+                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                                             }`}
                                     >
-                                        {React.cloneElement(item.icon, {
-                                            className: `w-4 h-4 mr-2 ${isActive ? 'text-sky-500' : 'text-slate-400'}`
-                                        })}
-                                        {item.label}
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="desktop-nav-indicator"
+                                                className="absolute inset-0 bg-sky-50 rounded-lg shadow-sm border border-sky-100/50"
+                                                initial={false}
+                                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                            />
+                                        )}
+                                        <span className="relative z-10 flex items-center">
+                                            {React.cloneElement(item.icon, {
+                                                className: `w-4 h-4 mr-2 transition-colors duration-200 ${isActive ? 'text-sky-500' : 'text-slate-400'}`
+                                            })}
+                                            {item.label}
+                                        </span>
                                     </button>
                                 );
                             })}
@@ -92,38 +108,54 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 </div>
 
                 {/* Mobile Navigation */}
-                {mobileMenuOpen && (
-                    <div className="md:hidden bg-white border-b border-slate-200 shadow-lg absolute w-full z-40">
-                        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                            {navItems.map((item) => {
-                                const isActive = location.pathname === item.key;
-                                return (
-                                    <button
-                                        key={item.key}
-                                        onClick={() => {
-                                            navigate(item.key);
-                                            setMobileMenuOpen(false);
-                                        }}
-                                        className={`flex w-full items-center px-3 py-3 rounded-md text-base font-medium ${isActive ? 'bg-sky-50 text-sky-600' : 'text-slate-600 hover:bg-slate-50'
-                                            }`}
-                                    >
-                                        {React.cloneElement(item.icon, {
-                                            className: `w-5 h-5 mr-3 ${isActive ? 'text-sky-500' : 'text-slate-400'}`
-                                        })}
-                                        {item.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
+                <AnimatePresence>
+                    {mobileMenuOpen && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="md:hidden bg-white border-b border-slate-200 shadow-lg absolute w-full z-40 overflow-hidden"
+                        >
+                            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                                {navItems.map((item) => {
+                                    const isActive = location.pathname === item.key;
+                                    return (
+                                        <button
+                                            key={item.key}
+                                            onClick={() => {
+                                                navigate(item.key);
+                                                setMobileMenuOpen(false);
+                                            }}
+                                            className={`flex w-full items-center px-3 py-3 rounded-md text-base font-medium ${isActive ? 'bg-sky-50 text-sky-600' : 'text-slate-600 hover:bg-slate-50'
+                                                }`}
+                                        >
+                                            {React.cloneElement(item.icon, {
+                                                className: `w-5 h-5 mr-3 ${isActive ? 'text-sky-500' : 'text-slate-400'}`
+                                            })}
+                                            {item.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {children}
-                </div>
+            <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 relative overflow-hidden">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={location.pathname}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -15 }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                    >
+                        {children}
+                    </motion.div>
+                </AnimatePresence>
             </main>
 
             {/* Footer */}

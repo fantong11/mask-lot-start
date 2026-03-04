@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Input, Table, Button, Tag, Select } from 'antd';
 import { Search as SearchIcon, Rocket, Filter, Briefcase, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useProductSearch } from '../hooks/useProductSearch';
 import { Product } from '../services/mockData';
 import type { ColumnsType } from 'antd/es/table';
@@ -91,18 +92,38 @@ const SearchPage: React.FC = () => {
     return (
         <div className="max-w-6xl mx-auto space-y-8">
             {/* Hero Section */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-slate-800 to-sky-900 text-white shadow-xl shadow-sky-900/20 p-8 sm:p-12">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-slate-800 to-sky-900 text-white shadow-xl shadow-sky-900/20 p-8 sm:p-12"
+            >
                 <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] animate-pulse-slow"></div>
                 <div className="relative z-10 max-w-2xl">
-                    <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
+                    <motion.h1
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4"
+                    >
                         Mask Lot Start <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300">System</span>
-                    </h1>
-                    <p className="text-lg text-slate-300 mb-8 max-w-xl">
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        className="text-lg text-slate-300 mb-8 max-w-xl"
+                    >
                         Locate your target product mask, define production parameters, and instantly start new lots with precision and speed.
-                    </p>
+                    </motion.p>
 
                     {/* Primary Search Bar Overlapping visually */}
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                        className="flex flex-col sm:flex-row gap-3"
+                    >
                         <Input
                             size="large"
                             className="h-14 rounded-xl text-lg shadow-inner"
@@ -121,9 +142,9 @@ const SearchPage: React.FC = () => {
                         >
                             Search
                         </Button>
-                    </div>
+                    </motion.div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Filters and Results Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">

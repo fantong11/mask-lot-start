@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Form, Select, Button, Input, message, Tag } from 'antd';
 import { ArrowLeft, Copy, Layers as LayersIcon, MapPin, Building2, AlignLeft, Info, Rocket } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLotStartForm } from '../hooks/useLotStartForm';
 
 const { Option } = Select;
@@ -143,91 +144,107 @@ const LotStartForm: React.FC = () => {
                                     Layer Configurations
                                 </h4>
 
-                                <div className="space-y-4">
-                                    {selectedLayers.map((layer, index) => (
-                                        <div
-                                            key={layer}
-                                            className="rounded-xl border border-slate-200 bg-white overflow-hidden transition-all hover:border-sky-300 hover:shadow-md hover:shadow-sky-100/50"
-                                        >
-                                            <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3">
-                                                <div className="flex items-center">
-                                                    <span className="flex h-2.5 w-2.5 relative mr-2.5">
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
-                                                    </span>
-                                                    <span className="font-semibold text-slate-700">Layer {layer}</span>
+                                <motion.div
+                                    className="space-y-4"
+                                    initial="hidden"
+                                    animate="visible"
+                                    variants={{
+                                        hidden: { opacity: 0 },
+                                        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                                    }}
+                                >
+                                    <AnimatePresence>
+                                        {selectedLayers.map((layer, index) => (
+                                            <motion.div
+                                                key={layer}
+                                                variants={{
+                                                    hidden: { opacity: 0, y: 20 },
+                                                    visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+                                                }}
+                                                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                                                layout
+                                                className="rounded-xl border border-slate-200 bg-white overflow-hidden transition-all hover:border-sky-300 hover:shadow-md hover:shadow-sky-100/50"
+                                            >
+                                                <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3">
+                                                    <div className="flex items-center">
+                                                        <span className="flex h-2.5 w-2.5 relative mr-2.5">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
+                                                        </span>
+                                                        <span className="font-semibold text-slate-700">Layer {layer}</span>
+                                                    </div>
+
+                                                    {index > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded transition-colors flex items-center"
+                                                            onClick={() => {
+                                                                const prevLayer = selectedLayers[index - 1];
+                                                                const prevValues = form.getFieldValue(['lots', prevLayer]);
+                                                                if (prevValues) {
+                                                                    form.setFieldsValue({
+                                                                        lots: {
+                                                                            [layer]: { ...prevValues }
+                                                                        }
+                                                                    });
+                                                                    message.success(`Applied configuration from ${prevLayer}`);
+                                                                } else {
+                                                                    message.warning(`No data in ${prevLayer} to copy yet`);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Copy className="w-3 h-3 mr-1.5" />
+                                                            Mirror {selectedLayers[index - 1]}
+                                                        </button>
+                                                    )}
                                                 </div>
 
-                                                {index > 0 && (
-                                                    <button
-                                                        type="button"
-                                                        className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded transition-colors flex items-center"
-                                                        onClick={() => {
-                                                            const prevLayer = selectedLayers[index - 1];
-                                                            const prevValues = form.getFieldValue(['lots', prevLayer]);
-                                                            if (prevValues) {
-                                                                form.setFieldsValue({
-                                                                    lots: {
-                                                                        [layer]: { ...prevValues }
-                                                                    }
-                                                                });
-                                                                message.success(`Applied configuration from ${prevLayer}`);
-                                                            } else {
-                                                                message.warning(`No data in ${prevLayer} to copy yet`);
-                                                            }
-                                                        }}
+                                                <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-5">
+                                                    <Form.Item
+                                                        name={['lots', layer, 'fab']}
+                                                        label={<span className="text-xs font-semibold text-slate-500 flex items-center"><Building2 className="w-3.5 h-3.5 mr-1.5" />Target Fab</span>}
+                                                        rules={[{ required: true, message: 'Fab is required' }]}
+                                                        className="m-0"
                                                     >
-                                                        <Copy className="w-3 h-3 mr-1.5" />
-                                                        Mirror {selectedLayers[index - 1]}
-                                                    </button>
-                                                )}
-                                            </div>
+                                                        <Select loading={optionsLoading} disabled={optionsLoading} placeholder="Select Fab" size="large" className="w-full">
+                                                            {options.fabs.map(fab => <Option key={fab} value={fab}>{fab}</Option>)}
+                                                        </Select>
+                                                    </Form.Item>
 
-                                            <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-5">
-                                                <Form.Item
-                                                    name={['lots', layer, 'fab']}
-                                                    label={<span className="text-xs font-semibold text-slate-500 flex items-center"><Building2 className="w-3.5 h-3.5 mr-1.5" />Target Fab</span>}
-                                                    rules={[{ required: true, message: 'Fab is required' }]}
-                                                    className="m-0"
-                                                >
-                                                    <Select loading={optionsLoading} disabled={optionsLoading} placeholder="Select Fab" size="large" className="w-full">
-                                                        {options.fabs.map(fab => <Option key={fab} value={fab}>{fab}</Option>)}
-                                                    </Select>
-                                                </Form.Item>
+                                                    <Form.Item
+                                                        name={['lots', layer, 'reason']}
+                                                        label={<span className="text-xs font-semibold text-slate-500 flex items-center"><Info className="w-3.5 h-3.5 mr-1.5" />Reason</span>}
+                                                        rules={[{ required: true, message: 'Reason is required' }]}
+                                                        className="m-0"
+                                                    >
+                                                        <Select loading={optionsLoading} disabled={optionsLoading} placeholder="Select Reason" size="large" className="w-full">
+                                                            {options.reasons.map(r => <Option key={r} value={r}>{r}</Option>)}
+                                                        </Select>
+                                                    </Form.Item>
 
-                                                <Form.Item
-                                                    name={['lots', layer, 'reason']}
-                                                    label={<span className="text-xs font-semibold text-slate-500 flex items-center"><Info className="w-3.5 h-3.5 mr-1.5" />Reason</span>}
-                                                    rules={[{ required: true, message: 'Reason is required' }]}
-                                                    className="m-0"
-                                                >
-                                                    <Select loading={optionsLoading} disabled={optionsLoading} placeholder="Select Reason" size="large" className="w-full">
-                                                        {options.reasons.map(r => <Option key={r} value={r}>{r}</Option>)}
-                                                    </Select>
-                                                </Form.Item>
+                                                    <Form.Item
+                                                        name={['lots', layer, 'priority']}
+                                                        label={<span className="text-xs font-semibold text-slate-500 flex items-center"><MapPin className="w-3.5 h-3.5 mr-1.5" />Priority</span>}
+                                                        rules={[{ required: true, message: 'Priority is required' }]}
+                                                        className="m-0"
+                                                    >
+                                                        <Select loading={optionsLoading} disabled={optionsLoading} placeholder="Select Priority" size="large" className="w-full">
+                                                            {options.priorities.map(p => <Option key={p} value={p}>{p}</Option>)}
+                                                        </Select>
+                                                    </Form.Item>
 
-                                                <Form.Item
-                                                    name={['lots', layer, 'priority']}
-                                                    label={<span className="text-xs font-semibold text-slate-500 flex items-center"><MapPin className="w-3.5 h-3.5 mr-1.5" />Priority</span>}
-                                                    rules={[{ required: true, message: 'Priority is required' }]}
-                                                    className="m-0"
-                                                >
-                                                    <Select loading={optionsLoading} disabled={optionsLoading} placeholder="Select Priority" size="large" className="w-full">
-                                                        {options.priorities.map(p => <Option key={p} value={p}>{p}</Option>)}
-                                                    </Select>
-                                                </Form.Item>
-
-                                                <Form.Item
-                                                    name={['lots', layer, 'note']}
-                                                    label={<span className="text-xs font-semibold text-slate-500">Additional Instructions (Optional)</span>}
-                                                    className="m-0 md:col-span-3"
-                                                >
-                                                    <Input placeholder={`Specific notes, handling instructions, or references for ${layer}...`} className="rounded-lg" size="large" />
-                                                </Form.Item>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                                    <Form.Item
+                                                        name={['lots', layer, 'note']}
+                                                        label={<span className="text-xs font-semibold text-slate-500">Additional Instructions (Optional)</span>}
+                                                        className="m-0 md:col-span-3"
+                                                    >
+                                                        <Input placeholder={`Specific notes, handling instructions, or references for ${layer}...`} className="rounded-lg" size="large" />
+                                                    </Form.Item>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </AnimatePresence>
+                                </motion.div>
 
                                 <div className="pt-6">
                                     <Button
